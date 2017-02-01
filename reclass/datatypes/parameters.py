@@ -95,10 +95,10 @@ class Parameters(object):
             # the new value is a string, let's see if it contains references,
             # by way of wrapping it in a RefValue and querying the result
             ret = RefValue(new, self.delimiter)
-            if not ret.has_references():
+            if not ret.has_references() and not ret.has_escapes():
                 # do not replace with RefValue instance if there are no
-                # references, i.e. discard the RefValue in ret, just return
-                # the new value
+                # references or escapes, i.e. discard the RefValue in ret,
+                # just return the new value
                 return new
 
         # So we now have a RefValue. Let's, keep a reference to the instance

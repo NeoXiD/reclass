@@ -146,6 +146,24 @@ storage modules, the ``for_demonstration`` parameter will have a value of
 Types are preserved if the value contains nothing but a reference. Hence, the
 value of ``dict_reference`` will actually be a dictionary.
 
+If you ever want to actually output "${location}", you can escape the
+interpolation by preceding the expression with a single backslash ('\').
+In case you actually need to write a backslash, followed by a interpolation,
+just use a double backslash to get the job done, e.g.::
+
+  parameters:
+    location: Munich, Germany
+    motd:
+      header_unescaped: This node sits in ${location}
+      header_escaped: This node sits in \${location}
+      header_double_escaped: This node sits in \\${location}
+
+would result in the following three strings::
+
+  header_unescaped: "This node sits in Munich, Germany"
+  header_escaped: "This node sits in \${location}"
+  header_double_escaped: "This node sits in \Munich, Germany"
+
 You should now be ready to :doc:`use reclass <usage>`!
 
 .. include:: substs.inc

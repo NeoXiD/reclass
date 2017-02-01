@@ -7,7 +7,8 @@
 # Released under the terms of the Artistic Licence 2.0
 #
 from reclass.datatypes import Parameters
-from reclass.defaults import PARAMETER_INTERPOLATION_SENTINELS
+from reclass.defaults import PARAMETER_INTERPOLATION_SENTINELS, \
+        ESCAPE_CHARACTER
 from reclass.errors import InfiniteRecursionError
 import unittest
 try:
@@ -252,6 +253,29 @@ class TestParametersNoMock(unittest.TestCase):
         p = Parameters(d)
         with self.assertRaises(InfiniteRecursionError):
             p.interpolate()
+
+    def test_interpolate_escaping(self):
+        v = 'bar'.join(PARAMETER_INTERPOLATION_SENTINELS)
+        d = {'foo': ESCAPE_CHARACTER + 'bar'.join(PARAMETER_INTERPOLATION_SENTINELS),
+             'bar': 'unused'}
+        p = Parameters(d)
+        p.interpolate()
+        self.assertEqual(p.as_dict()['foo'], v)
+
+    def test_interpolate_double_escaping(self):
+        v = ESCAPE_CHARACTER + 'meep' 
+        d = {'foo': ESCAPE_CHARACTER + ESCAPE_CHARACTER + 'bar'.join(PARAMETER_INTERPOLATION_SENTINELS),
+             'bar': 'meep'}
+        p = Parameters(d)
+        p.interpolate()
+        self.assertEqual(p.as_dict()['foo'], v)
+
+    def test_interpolate_escaping_backwards_compatibility(self):
+        v = ' '.join(['1', ESCAPE_CHARACTER, '2', ESCAPE_CHARACTER + ESCAPE_CHARACTER, '3', ESCAPE_CHARACTER])
+        d = {'foo': v}
+        p = Parameters(d)
+        p.interpolate()
+        self.assertEqual(p.as_dict()['foo'], v)
 
 if __name__ == '__main__':
     unittest.main()
