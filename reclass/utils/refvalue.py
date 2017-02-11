@@ -73,6 +73,9 @@ class RefValue(object):
     LT_INTRPL_END = 'INTRPL_END'
     LT_LITERAL = 'LITERAL'
 
+    # Set of escapable lexer tokens
+    ESCAPABLE_LT_TOKENS = (LT_ESCAPE, LT_INTRPL_START)
+
     # Parser part types
     PT_LITERAL = 0
     PT_REFERENCE = 1
@@ -159,27 +162,27 @@ class RefValue(object):
                     # If the escape token is the last one, just add the token as a literal.
                     parts.append({'type': self.PT_LITERAL, 'data': token[self.TT_TEXT]})
                 elif index + 1 <= tokens_last_index \
-                        and tokens[index + 1][self.TT_TAG] == self.LT_LITERAL:
-                    # If the escape token is not the last one and the next token is a literal,
+                        and tokens[index + 1][self.TT_TAG] not in self.ESCAPABLE_LT_TOKENS:
+                    # If the escape token is not the last one and the next token is unescapable,
                     # add the escape token normally to the string without skipping it. This
                     # ensures backwards-compatibility to older versions.
                     parts.append({'type': self.PT_LITERAL, 'data': token[self.TT_TEXT]})
                 elif index + 2 <= tokens_last_index \
                         and tokens[index + 1][self.TT_TAG] == self.LT_ESCAPE \
-                        and tokens[index + 2][self.TT_TAG] == self.LT_LITERAL:
+                        and tokens[index + 2][self.TT_TAG] not in self.ESCAPABLE_LT_TOKENS:
                     # If the escape token is not the second last one, the next token is another
-                    # escape token and the second-next token is a literal, add both escapes
+                    # escape token and the second-next token is unescapable, add both escapes
                     # normally to the string. This ensures backwards-compatibility to older
                     # versions.
                     parts.append({'type': self.PT_LITERAL, 'data': token[self.TT_TEXT]})
                     parts.append({'type': self.PT_LITERAL, 'data': tokens[index + 1][self.TT_TEXT]})
                     token_iterator.next()
                 else:
-                    # If the escape token is not the last one and the next token is neither a
-                    # literal nor a escape token, add the next token as a literal and skip
-                    # processing of the next token. Additionally, set _has_references to
-                    # True so that we can signal to other classes that the string still
-                    # needs to be rendered and can not be just used as-is.
+                    # If the escape token is not the last one and the next token is escapable,
+                    # add the next token as a literal and skip processing of the next token.
+                    # Additionally, set _has_references to True so that we can signal to other
+                    # classes that the string still needs to be rendered and can not be just
+                    # used as-is to avoid rendering escape tokens.
                     parts.append({'type': self.PT_LITERAL, 'data': tokens[index + 1][self.TT_TEXT]})
                     token_iterator.next()
                     self._has_escapes = True

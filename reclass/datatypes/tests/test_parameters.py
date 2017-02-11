@@ -271,7 +271,18 @@ class TestParametersNoMock(unittest.TestCase):
         self.assertEqual(p.as_dict()['foo'], v)
 
     def test_interpolate_escaping_backwards_compatibility(self):
-        v = ' '.join(['1', ESCAPE_CHARACTER, '2', ESCAPE_CHARACTER + ESCAPE_CHARACTER, '3', ESCAPE_CHARACTER])
+        """In all following cases, escaping should not happen and the escape character
+        needs to be printed as-is, to ensure backwards compatibility to older versions."""
+        v = ' '.join([
+            # Escape character followed by unescapable character
+            '1', ESCAPE_CHARACTER,
+            # Escape character followed by escape character
+            '2', ESCAPE_CHARACTER + ESCAPE_CHARACTER,
+            # Escape character followed by interpolation end sentinel
+            '3', ESCAPE_CHARACTER + PARAMETER_INTERPOLATION_SENTINELS[1],
+            # Escape character at the end of the string
+            '4', ESCAPE_CHARACTER
+            ])
         d = {'foo': v}
         p = Parameters(d)
         p.interpolate()
